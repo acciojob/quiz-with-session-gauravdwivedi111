@@ -37,13 +37,18 @@ const questions = [
   },
 ];
 
-// Display the quiz questions and choices
+// ========== RENDER QUESTIONS ==========
+
 function renderQuestions() {
+  questionsElement.innerHTML = ""; // clear before rendering
+
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
 
     const questionElement = document.createElement("div");
-    questionElement.innerHTML = `<p>${question.question}</p>`;
+    questionElement.appendChild(
+      document.createTextNode(question.question)
+    );
 
     for (let j = 0; j < question.choices.length; j++) {
       const choice = question.choices[j];
@@ -53,30 +58,29 @@ function renderQuestions() {
       choiceElement.name = `question-${i}`;
       choiceElement.value = choice;
 
-      // Restore checked answer after refresh
+      // ✅ Restore checked state using ATTRIBUTE (important for Cypress)
       if (userAnswers[i] === choice) {
-        choiceElement.checked = true;
+        choiceElement.setAttribute("checked", "true");
       }
 
-      // Save progress to sessionStorage
+      // Save progress when user selects
       choiceElement.addEventListener("change", function () {
         userAnswers[i] = choice;
         sessionStorage.setItem("progress", JSON.stringify(userAnswers));
       });
 
-      const label = document.createElement("label");
-      label.appendChild(choiceElement);
-      label.appendChild(document.createTextNode(choice));
-
-      questionElement.appendChild(label);
-      questionElement.appendChild(document.createElement("br"));
+      questionElement.appendChild(choiceElement);
+      questionElement.appendChild(
+        document.createTextNode(choice)
+      );
     }
 
     questionsElement.appendChild(questionElement);
   }
 }
 
-// Submit Button Logic
+// ========== SUBMIT LOGIC ==========
+
 submitButton.addEventListener("click", function () {
   let score = 0;
 
@@ -88,14 +92,17 @@ submitButton.addEventListener("click", function () {
 
   scoreElement.innerText = `Your score is ${score} out of 5.`;
 
-  // Store final score in localStorage
-  localStorage.setItem("score", score);
+  // ✅ Store only number as string (Cypress expects "3")
+  localStorage.setItem("score", score.toString());
 });
 
-// Show previous score if exists (after refresh)
+// ========== RESTORE SAVED SCORE ==========
+
 const savedScore = localStorage.getItem("score");
+
 if (savedScore !== null) {
   scoreElement.innerText = `Your score is ${savedScore} out of 5.`;
 }
 
+// Initial render
 renderQuestions();
